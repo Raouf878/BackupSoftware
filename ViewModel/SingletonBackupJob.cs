@@ -60,26 +60,40 @@ namespace BackupSoftware.ViewModel
             }
         }
 
-        private void CopyFiles(string sourcePath, string destinationPath)
+        private void CopyFiles(string source, string destination)
         {
-            if (!File.Exists(sourcePath))
-            {
-                Console.WriteLine(sourcePath);
-                throw new FileNotFoundException($"Source file not found: {sourcePath}");
-            }
             try
             {
-                File.Copy(sourcePath, destinationPath, true);
-                File.SetCreationTime(destinationPath, File.GetCreationTime(sourcePath));
-                File.SetLastAccessTime(destinationPath, File.GetLastAccessTime(sourcePath));
-                File.SetLastWriteTime(destinationPath, File.GetLastWriteTime(sourcePath));
+                // Get all files in the source directory
+                string[] files = Directory.GetFiles(source);
+
+                // Iterate through each file and copy it to the destination directory
+                foreach (string sourcePath in files)
+                {
+                    // Construct the destination path by combining the destination directory and the file name
+                    string fileName = Path.GetFileName(sourcePath);
+                    string destinationPath = Path.Combine(destination, fileName);
+
+                    // Read all bytes from the source file
+                    byte[] fileBytes = File.ReadAllBytes(sourcePath);
+
+                    // Write the bytes to a new file at the destination
+                    File.WriteAllBytes(destinationPath, fileBytes);
+
+                    // Set the creation time, last access time, and last write time of the destination file
+                    File.SetCreationTime(destinationPath, File.GetCreationTime(sourcePath));
+                    File.SetLastAccessTime(destinationPath, File.GetLastAccessTime(sourcePath));
+                    File.SetLastWriteTime(destinationPath, File.GetLastWriteTime(sourcePath));
+                }
             }
             catch (UnauthorizedAccessException ex)
             {
+                // Handle unauthorized access exception
                 throw new UnauthorizedAccessException($"Access denied. Error details: {ex.Message}");
             }
             catch (IOException ex)
             {
+                // Handle general I/O exception during file copy
                 throw new IOException($"Error during file copy. Error details: {ex.Message}");
             }
         }

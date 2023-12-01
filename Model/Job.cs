@@ -9,7 +9,7 @@ namespace BackupSoftware.Model
         public string Source { get; private set; }
         public string Type { get; private set; }
 
-        public Job(string name, string destination, string source, string type)
+        public Job(string source, string destination, string name, string type)
         {
             Name = name;
             Destination = destination;

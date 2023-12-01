@@ -1,30 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BackupSoftware.Model
 {
     class Job
     {
-        private string Name;
-        private string Destination;
-        private string Source;
-        private string Type;
+        public string Name { get; private set; }
+        public string Destination { get; private set; }
+        public string Source { get; private set; }
+        public string Type { get; private set; }
 
-        public Job(string _Name, string _Destination, string _Source, string _Type)
+        public Job(string name, string destination, string source, string type)
         {
-            Name = _Name;
-            Destination = _Destination;
-            Source = _Source;
-            Type = _Type;
+            Name = name;
+            Destination = destination;
+            Source = source;
+            Type = type;
         }
-        public String NAME { get => Name; set => Name = value; }
-        public String DESTINATION { get => Destination; set => Destination = value; }
-        public String SOURCE { get => Source; set => Source = value; }
-        public String TYPE { get => Type; set => Type = value; }
-
-
     }
 }

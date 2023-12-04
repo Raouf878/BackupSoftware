@@ -4,9 +4,9 @@ namespace BackupSoftware.View
 {
     class Views
     {
-        public SingletonBackupJob MsVM { get; set; }
+        public BackupJob MsVM { get; set; }
 
-        public Views(SingletonBackupJob s)
+        public Views(BackupJob s)
         {
             MsVM = s;
         }

@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using BackupSoftware.Model;
 
 namespace BackupSoftware.ViewModel
 {
@@ -83,35 +85,50 @@ namespace BackupSoftware.ViewModel
         }
     }
 
-    class SingletonBackupJob
+    class BackupManager
     {
-        private static SingletonBackupJob instance;
-        private static readonly object lockObject = new object();
-        private Model.Job jobInstance;
+        private List<BackupJob> backupJobs;
+
+        public BackupManager()
+        {
+            backupJobs = new List<BackupJob>();
+        }
+        public BackupJob GetLastBackupJob()
+        {
+            return backupJobs.LastOrDefault();
+        }
+        public void AddBackupJob(Job jobInstance)
+        {
+            if (backupJobs.Count < 5)
+            {
+                var backupJob = new BackupJob(jobInstance);
+                backupJobs.Add(backupJob);
+            }
+            else
+            {
+                Console.WriteLine("Error: Maximum number of backup jobs (5) reached.");
+            }
+        }
+
+        public void RunBackupJobs()
+        {
+            foreach (var backupJob in backupJobs)
+            {
+                backupJob.RunBackupJob();
+            }
+        }
+    }
+
+    class BackupJob
+    {
+        private Job jobInstance;
         private LogFile logFile;
         private IBackupStrategy backupStrategy;
 
-
-        private SingletonBackupJob() { }
-        public SingletonBackupJob(Model.Job jobInstance)
+        public BackupJob(Job jobInstance)
         {
             this.jobInstance = jobInstance;
-            this.logFile = new LogFile(this, "C:\\Users\\LENOVO\\Desktop\\ali C_C++\\ali\\LogFile\\Logfile.txt");
-        }
-
-        public static SingletonBackupJob GetBackupJobInstance(Model.Job jobInstance)
-        {
-            if (instance == null)
-            {
-                lock (lockObject)
-                {
-                    if (instance == null)
-                    {
-                        instance = new SingletonBackupJob(jobInstance);
-                    }
-                }
-            }
-            return instance;
+            this.logFile = new LogFile();
         }
 
         public void SetBackupStrategy(IBackupStrategy strategy)
@@ -128,8 +145,29 @@ namespace BackupSoftware.ViewModel
                     return "Error: Backup strategy not set.";
                 }
 
-                string result = backupStrategy.Backup(jobInstance.Source, jobInstance.Destination);
-                logFile.WriteLogFile(jobInstance.Name, jobInstance.Source, jobInstance.Destination, result);
+                string sourcePath = jobInstance.Source;
+                string destinationPath = jobInstance.Destination;
+
+                if (string.IsNullOrWhiteSpace(sourcePath) || string.IsNullOrWhiteSpace(destinationPath))
+                {
+                    return "Error: Source or destination path is null or empty.";
+                }
+
+                sourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, sourcePath);
+                destinationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, destinationPath);
+
+                if (!Directory.Exists(sourcePath))
+                {
+                    return $"Error: Source directory does not exist - {sourcePath}";
+                }
+
+                if (!Directory.Exists(destinationPath))
+                {
+                    Directory.CreateDirectory(destinationPath);
+                }
+
+                string result = backupStrategy.Backup(sourcePath, destinationPath);
+                logFile.WriteLogFile(jobInstance.Name, sourcePath, destinationPath, result);
                 return result;
             }
             catch (Exception ex)
@@ -141,13 +179,11 @@ namespace BackupSoftware.ViewModel
 
     class LogFile
     {
-        private SingletonBackupJob backupJob;
-        private string logFilePath;
+        private List<LogEntry> logEntries;
 
-        public LogFile(SingletonBackupJob backupJob, string logFilePath)
+        public LogFile()
         {
-            this.backupJob = backupJob;
-            this.logFilePath = logFilePath;
+            logEntries = new List<LogEntry>();
         }
 
         public void WriteLogFile(string jobName, string source, string destination, string result)
@@ -156,11 +192,24 @@ namespace BackupSoftware.ViewModel
             {
                 List<BackupFileInfo> backupFilesInfo = new List<BackupFileInfo>();
 
+                string logDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "BackupLogFile");
+                Directory.CreateDirectory(logDirectory);  
+
+                string logFilePath = Path.Combine(logDirectory, "BackupLogFile");
+
+                if (!File.Exists(logFilePath))
+                {
+                    using (StreamWriter createLogFile = File.CreateText(logFilePath))
+                    {
+                        createLogFile.WriteLine("Log file created at: " + DateTime.Now);
+                    }
+                }
+
                 string[] files = Directory.GetFiles(source);
 
                 foreach (string sourcePath in files)
                 {
-                    BackupFileInfo fileInfo = new BackupFileInfo 
+                    BackupFileInfo fileInfo = new BackupFileInfo
                     {
                         FileName = Path.GetFileName(sourcePath),
                         SizeInBytes = new FileInfo(sourcePath).Length,
@@ -191,19 +240,10 @@ namespace BackupSoftware.ViewModel
                     BackupFilesInfo = backupFilesInfo
                 };
 
-                
+                logEntries.Find(entry => entry.JobName == jobName)?.BackupLogEntries.Add(logEntry);
+
                 string jsonLogEntry = JsonConvert.SerializeObject(logEntry, Formatting.Indented);
 
-                Directory.CreateDirectory(Path.GetDirectoryName(logFilePath));
-
-                
-                if (!File.Exists(logFilePath))
-                {
-                    using (StreamWriter createLogFile = File.CreateText(logFilePath))
-                    {
-                        createLogFile.WriteLine("Log file created at: " + DateTime.Now);
-                    }
-                }
                 using (StreamWriter writer = File.AppendText(logFilePath))
                 {
                     writer.WriteLine(jsonLogEntry);
@@ -217,6 +257,18 @@ namespace BackupSoftware.ViewModel
             }
         }
 
+        private class LogEntry
+        {
+            public string JobName { get; }
+            public List<BackupLogEntry> BackupLogEntries { get; }
+
+            public LogEntry(string jobName)
+            {
+                JobName = jobName;
+                BackupLogEntries = new List<BackupLogEntry>();
+            }
+        }
+
         public class BackupFileInfo
         {
             public string FileName { get; set; }
@@ -225,7 +277,7 @@ namespace BackupSoftware.ViewModel
             public DateTime TransferTimestamp { get; set; }
             public string SourcePath { get; set; }
             public string DestinationPath { get; set; }
-            public double TransferTimeInMilliseconds { get; set; } 
+            public double TransferTimeInMilliseconds { get; set; }
         }
 
         public class BackupLogEntry
@@ -237,11 +289,7 @@ namespace BackupSoftware.ViewModel
             public List<BackupFileInfo> BackupFilesInfo { get; set; }
         }
 
-        class Job
-        {
-            public string Name { get; set; }
-            public string Source { get; set; }
-            public string Destination { get; set; }
-        }
     }
+
+    
 }

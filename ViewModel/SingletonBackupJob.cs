@@ -1,8 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using BackupSoftware.Model;
+﻿using BackupSoftware.Model;
+using Newtonsoft.Json;
 
 namespace BackupSoftware.ViewModel
 {
@@ -193,7 +190,7 @@ namespace BackupSoftware.ViewModel
                 List<BackupFileInfo> backupFilesInfo = new List<BackupFileInfo>();
 
                 string logDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "BackupLogFile");
-                Directory.CreateDirectory(logDirectory);  
+                Directory.CreateDirectory(logDirectory);
 
                 string logFilePath = Path.Combine(logDirectory, "BackupLogFile");
 
@@ -291,5 +288,5 @@ namespace BackupSoftware.ViewModel
 
     }
 
-    
+
 }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BackupSoftware.Model
+﻿namespace BackupSoftware.Model
 {
     class Job
     {

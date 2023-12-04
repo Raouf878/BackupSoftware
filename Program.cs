@@ -1,15 +1,12 @@
-﻿using BackupSoftware.View;
-using System;
-using BackupSoftware.Model;
+﻿using System;
+using BackupSoftware.View;
 using BackupSoftware.ViewModel;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Xml.Linq;
 
 namespace BackupSoftware
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             Console.WriteLine("Please enter job name:");
             string jobName = Console.ReadLine();
@@ -20,18 +17,37 @@ namespace BackupSoftware
             Console.WriteLine("Please enter destination:");
             string destination = Console.ReadLine();
 
-            Console.WriteLine("Please enter job type:");
-            string jobType = Console.ReadLine();
+            Console.WriteLine("Please enter job type (1 for Differential, 2 for Full):");
+            string jobTypeInput = Console.ReadLine();
 
-            // Create a Job with user-entered values
-            Job jb = new Job(source, destination, jobName, jobType);
 
-            // Create a SingletonBackupJob with the Job
-            SingletonBackupJob backupJob = new SingletonBackupJob(jb);
+            Model.Job jobInstance = new Model.Job(jobName, source, destination, jobTypeInput);
 
-            // Assuming that Views class and MsVM property are properly defined
-            Views v = new Views(backupJob);
+            SingletonBackupJob backupJobInstance = SingletonBackupJob.GetBackupJobInstance(jobInstance);
+
+            
+            if (jobTypeInput == "1")
+            {
+                backupJobInstance.SetBackupStrategy(new DifferentialBackup());
+            }
+            else if (jobTypeInput == "2")
+            {
+                backupJobInstance.SetBackupStrategy(new FullBackup());
+            }
+            else
+            {
+                Console.WriteLine("Invalid job type input.");
+                return;
+            }
+
+            string result = backupJobInstance.RunBackupJob();
+
+            
+            Views v = new Views(backupJobInstance);
             Console.WriteLine($"Your transformed sentence: {v.MsVM.RunBackupJob()}");
+
+           
+            Console.ReadLine();
         }
     }
 }

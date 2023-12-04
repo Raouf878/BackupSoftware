@@ -1,26 +1,105 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.IO;
-using System.Text;
-using System.Xml.Linq;
-using BackupSoftware.Model;
-using Microsoft.VisualBasic.FileIO;
-using System.Collections.Generic;
 
 namespace BackupSoftware.ViewModel
 {
+    interface IBackupStrategy
+    {
+        string Backup(string source, string destination);
+    }
+
+    class DifferentialBackup : IBackupStrategy
+    {
+        private DateTime lastBackupTime;
+
+        public DifferentialBackup()
+        {
+            lastBackupTime = DateTime.MinValue;
+        }
+
+        public string Backup(string source, string destination)
+        {
+            try
+            {
+                string[] files = Directory.GetFiles(source);
+
+                foreach (string sourcePath in files)
+                {
+                    if (File.GetLastWriteTime(sourcePath) > lastBackupTime)
+                    {
+                        string fileName = Path.GetFileName(sourcePath);
+                        string destinationPath = Path.Combine(destination, fileName);
+
+                        byte[] fileBytes = File.ReadAllBytes(sourcePath);
+
+                        File.WriteAllBytes(destinationPath, fileBytes);
+
+                        File.SetCreationTime(destinationPath, File.GetCreationTime(sourcePath));
+                        File.SetLastAccessTime(destinationPath, File.GetLastAccessTime(sourcePath));
+                        File.SetLastWriteTime(destinationPath, File.GetLastWriteTime(sourcePath));
+                    }
+                }
+
+                lastBackupTime = DateTime.Now;
+
+                return "Differential backup completed successfully.";
+            }
+            catch (Exception ex)
+            {
+                return $"Error in differential backup: {ex.Message}";
+            }
+        }
+    }
+
+    class FullBackup : IBackupStrategy
+    {
+        public string Backup(string source, string destination)
+        {
+            try
+            {
+                string[] files = Directory.GetFiles(source);
+
+                foreach (string sourcePath in files)
+                {
+                    string fileName = Path.GetFileName(sourcePath);
+                    string destinationPath = Path.Combine(destination, fileName);
+
+                    byte[] fileBytes = File.ReadAllBytes(sourcePath);
+
+                    File.WriteAllBytes(destinationPath, fileBytes);
+
+                    File.SetCreationTime(destinationPath, File.GetCreationTime(sourcePath));
+                    File.SetLastAccessTime(destinationPath, File.GetLastAccessTime(sourcePath));
+                    File.SetLastWriteTime(destinationPath, File.GetLastWriteTime(sourcePath));
+                }
+
+                return "Full backup completed successfully.";
+            }
+            catch (Exception ex)
+            {
+                return $"Error in full backup: {ex.Message}";
+            }
+        }
+    }
+
     class SingletonBackupJob
     {
         private static SingletonBackupJob instance;
         private static readonly object lockObject = new object();
-        private Job jb;
-        private List<Job> Jobs = new List<Job>();
+        private Model.Job jobInstance;
+        private LogFile logFile;
+        private IBackupStrategy backupStrategy;
 
-        public SingletonBackupJob(Job jb)
+
+        private SingletonBackupJob() { }
+        public SingletonBackupJob(Model.Job jobInstance)
         {
-            this.jb = jb;
+            this.jobInstance = jobInstance;
+            this.logFile = new LogFile(this, "C:\\Users\\LENOVO\\Desktop\\ali C_C++\\ali\\LogFile\\Logfile.txt");
         }
 
-        public static SingletonBackupJob GetBackupJobInstance(Job jb)
+        public static SingletonBackupJob GetBackupJobInstance(Model.Job jobInstance)
         {
             if (instance == null)
             {
@@ -28,74 +107,131 @@ namespace BackupSoftware.ViewModel
                 {
                     if (instance == null)
                     {
-                        instance = new SingletonBackupJob(jb);
+                        instance = new SingletonBackupJob(jobInstance);
                     }
                 }
             }
             return instance;
         }
 
-        public String RunBackupJob()
+        public void SetBackupStrategy(IBackupStrategy strategy)
+        {
+            this.backupStrategy = strategy;
+        }
+
+        public string RunBackupJob()
         {
             try
             {
-                CopyFiles(jb.Source, jb.Destination);
-                return "Backup job completed successfully.";
-            }
-            catch (FileNotFoundException ex)
-            {
-                return $"Error in backup job: {ex.Message}";
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return $"Error in backup job: {ex.Message}";
-            }
-            catch (IOException ex)
-            {
-                return $"Error in backup job: {ex.Message}";
+                if (backupStrategy == null)
+                {
+                    return "Error: Backup strategy not set.";
+                }
+
+                string result = backupStrategy.Backup(jobInstance.Source, jobInstance.Destination);
+                logFile.WriteLogFile(jobInstance.Name, jobInstance.Source, jobInstance.Destination, result);
+                return result;
             }
             catch (Exception ex)
             {
                 return $"Error in backup job: {ex.Message}";
             }
         }
+    }
 
-        private void CopyFiles(string source, string destination)
+    class LogFile
+    {
+        private SingletonBackupJob backupJob;
+        private string logFilePath;
+
+        public LogFile(SingletonBackupJob backupJob, string logFilePath)
+        {
+            this.backupJob = backupJob;
+            this.logFilePath = logFilePath;
+        }
+
+        public void WriteLogFile(string jobName, string source, string destination, string result)
         {
             try
             {
-                // Get all files in the source directory
+                List<BackupFileInfo> backupFilesInfo = new List<BackupFileInfo>();
+
                 string[] files = Directory.GetFiles(source);
 
-                // Iterate through each file and copy it to the destination directory
                 foreach (string sourcePath in files)
                 {
-                    // Construct the destination path by combining the destination directory and the file name
-                    string fileName = Path.GetFileName(sourcePath);
-                    string destinationPath = Path.Combine(destination, fileName);
+                    BackupFileInfo fileInfo = new BackupFileInfo 
+                    {
+                        FileName = Path.GetFileName(sourcePath),
+                        SizeInBytes = new FileInfo(sourcePath).Length,
+                        SourceTimestamp = File.GetLastWriteTime(sourcePath),
+                        TransferTimestamp = DateTime.Now,
+                        SourcePath = sourcePath,
+                        DestinationPath = Path.Combine(destination, Path.GetFileName(sourcePath)),
+                    };
 
-                    // Read all bytes from the source file
                     byte[] fileBytes = File.ReadAllBytes(sourcePath);
+                    File.WriteAllBytes(fileInfo.DestinationPath, fileBytes);
 
-                    // Write the bytes to a new file at the destination
-                    File.WriteAllBytes(destinationPath, fileBytes);
+                    FileInfo destinationInfo = new FileInfo(fileInfo.DestinationPath);
+                    destinationInfo.CreationTimeUtc = fileInfo.SourceTimestamp;
+                    destinationInfo.LastAccessTimeUtc = fileInfo.SourceTimestamp;
+                    destinationInfo.LastWriteTimeUtc = fileInfo.SourceTimestamp;
 
-                    // Set the creation time, last access time, and last write time of the destination file
-                    File.SetCreationTime(destinationPath, File.GetCreationTime(sourcePath));
-                    File.SetLastAccessTime(destinationPath, File.GetLastAccessTime(sourcePath));
-                    File.SetLastWriteTime(destinationPath, File.GetLastWriteTime(sourcePath));
+                    fileInfo.TransferTimeInMilliseconds = (DateTime.Now - fileInfo.TransferTimestamp).TotalMilliseconds;
+                    backupFilesInfo.Add(fileInfo);
                 }
+
+                BackupLogEntry logEntry = new BackupLogEntry
+                {
+                    JobName = jobName,
+                    SourceDirectory = source,
+                    DestinationDirectory = destination,
+                    Result = result,
+                    BackupFilesInfo = backupFilesInfo
+                };
+
+                
+                string jsonLogEntry = JsonConvert.SerializeObject(logEntry, Formatting.Indented);
+
+                using (StreamWriter writer = File.AppendText(logFilePath))
+                {
+                    writer.WriteLine(jsonLogEntry);
+                }
+
+                Console.WriteLine($"Log: Job '{jobName}' from '{source}' to '{destination}': {result}");
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                // Handle unauthorized access exception
-                throw new UnauthorizedAccessException($"Access denied. Error details: {ex.Message}");
+                Console.WriteLine($"Error writing to log file: {ex.Message}");
             }
-            catch (IOException ex)
-            {
-                // Handle general I/O exception during file copy
-                throw new IOException($"Error during file copy. Error details: {ex.Message}");
-            }
+        }
+
+        public class BackupFileInfo
+        {
+            public string FileName { get; set; }
+            public long SizeInBytes { get; set; }
+            public DateTime SourceTimestamp { get; set; }
+            public DateTime TransferTimestamp { get; set; }
+            public string SourcePath { get; set; }
+            public string DestinationPath { get; set; }
+            public double TransferTimeInMilliseconds { get; set; } 
+        }
+
+        public class BackupLogEntry
+        {
+            public string JobName { get; set; }
+            public string SourceDirectory { get; set; }
+            public string DestinationDirectory { get; set; }
+            public string Result { get; set; }
+            public List<BackupFileInfo> BackupFilesInfo { get; set; }
+        }
+
+        class Job
+        {
+            public string Name { get; set; }
+            public string Source { get; set; }
+            public string Destination { get; set; }
         }
     }
 }

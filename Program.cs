@@ -13,23 +13,24 @@ namespace BackupSoftware
              string bigText = @"
 
 
-                                                                                                         _______________
-                                                                                                        /               \
-                                                                                                       /                 \
-                                                                                                      /                   \
-          EEEEE  AAAAA  SSSSS  Y   Y       BBBBB   AAAAA  CCCCC   K   K  U   U  PPPPP                /                     \    
-         E       A   A  S      Y   Y       B   B   A   A  C       K  K   U   U  P    P              /                       \
-         EEEE    AAAAA  SSSS    Y Y        BBBB    AAAAA  C       KK     U   U  PPPPP              |     ____       ____     |
-         E       A   A      S    Y         B   B   A   A  C       K  K   U   U  P                  |    |    |     |    |    |
-          EEEEE  A   A  SSSSS    Y         BBBBB   A   A  CCCCC   K   K   UUU   P                  |    |____|     |____|    |
-                                                                                                   |     ____       ____     |
-                                                                                                   |    |    |     |    |    |
-                                                                                                   |    |____|     |____|    |
-                                                                                                   |                         |
-                                                                                                   |     _______________     |
-                                                                                                   |    |               |    |
-                                                                                                    \___|               |___/  
-                                                                                                         \_____________/       
+                                                                                                                 _______________
+                                                                                                                /               \
+                                                                                                               /                 \
+                                                                                                              /                   \
+          EEEEE  AAAAA  SSSSS  Y   Y       BBBBB   AAAAA  CCCCC   K   K  U   U  PPPPP                        /                     \    
+         E       A   A  S      Y   Y       B   B   A   A  C       K  K   U   U  P    P                      /                       \
+         EEEE    AAAAA  SSSS    Y Y        BBBB    AAAAA  C       KK     U   U  PPPPP                      |     ____       ____     |
+         E       A   A      S    Y         B   B   A   A  C       K  K   U   U  P                          |    |    |     |    |    |
+          EEEEE  A   A  SSSSS    Y         BBBBB   A   A  CCCCC   K   K   UUU   P                          |    |____|     |____|    |
+                                                                                                           |     ____       ____     |
+                                                                                                           |    |    |     |    |    |
+                                                                                                           |    |____|     |____|    |
+                                                                                                           |                         |
+                                                                                                           |     _______________     |
+                                                                                                           |    |               |    |
+                                                                                                            \___|               |___/  
+                                                                                                                 \_____________/       
+
 
         ";
 

@@ -1,6 +1,6 @@
 ﻿namespace BackupSoftware.Model
 {
-    class Job
+    public class Job
     {
         public string Name { get; set; }
         public string Source { get; set; }

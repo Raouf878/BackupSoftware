@@ -6,11 +6,11 @@ namespace BackupSoftware
 {
     class Program
     {
+        
         static void Main(string[] args)
         {
-
+            
             Console.WriteLine(Properties.Resources.Lang);
-
             string codeline = Console.ReadLine();
             Language bc = new Language(codeline);
             LanguageManager bcm = new LanguageManager(bc);
@@ -27,6 +27,7 @@ namespace BackupSoftware
             }
 
             BackupManager backupManager = new BackupManager();
+            
 
             for (int i = 1; i <= numberOfJobs; i++)
             {
@@ -52,6 +53,8 @@ namespace BackupSoftware
 
                 BackupSoftware.Model.Job job = new BackupSoftware.Model.Job(jobName, sourcePath, destinationPath, backupType);
                 backupManager.AddBackupJob(job);
+                BackupJob backupJob = new BackupJob(job);
+
 
                 IBackupStrategy strategy = backupType.Equals("Differential", StringComparison.OrdinalIgnoreCase) ? new DifferentialBackup()
                     : (IBackupStrategy)new FullBackup();
@@ -61,7 +64,7 @@ namespace BackupSoftware
             }
 
             // Now that all jobs are added, run backup jobs
-            backupManager.RunBackupJobs();
+            backupManager.GetLastBackupJob().RunBackupJob();
 
             Console.WriteLine(Properties.Resources.Exit);
             Console.ReadKey();

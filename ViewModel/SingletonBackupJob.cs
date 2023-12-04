@@ -194,6 +194,16 @@ namespace BackupSoftware.ViewModel
                 
                 string jsonLogEntry = JsonConvert.SerializeObject(logEntry, Formatting.Indented);
 
+                Directory.CreateDirectory(Path.GetDirectoryName(logFilePath));
+
+                
+                if (!File.Exists(logFilePath))
+                {
+                    using (StreamWriter createLogFile = File.CreateText(logFilePath))
+                    {
+                        createLogFile.WriteLine("Log file created at: " + DateTime.Now);
+                    }
+                }
                 using (StreamWriter writer = File.AppendText(logFilePath))
                 {
                     writer.WriteLine(jsonLogEntry);

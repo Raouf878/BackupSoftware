@@ -1,32 +1,22 @@
-﻿using System;
+﻿using BackupSoftware.ViewModel;
+using System;
 
 namespace BackupSoftware.Model
 {
     public sealed class SingletonBackupJob
     {
-        private static SingletonBackupJob instance = null;
-        private Model.Job backupJob;
+        private BackupJob backupJob;
 
+        public SingletonBackupJob() { }
 
-
-        public static SingletonBackupJob GetBackupJobInstance(Model.Job job)
+        public void CaculateBackupsNum()
         {
-            if (instance == null)
+            int backupNum=0;
+            if (backupJob != null)
             {
-                instance = new SingletonBackupJob();
+                backupNum += 1;
             }
-
-            instance.backupJob = job;
-            return instance;
-        }
-
-        public Model.Job GetBackupJob()
-        {
-            if (backupJob == null)
-            {
-                throw new InvalidOperationException("Backup job has not been set.");
-            }
-            return backupJob;
+           
         }
     }
 }

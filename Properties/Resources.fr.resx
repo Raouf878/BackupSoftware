@@ -147,9 +147,9 @@ en - Anglais</value>
     <value>Entrer le type de Sauvegrad </value>
   </data>
   <data name="TypeD" xml:space="preserve">
-    <value>Différentiele</value>
+    <value>pour Différentiele entrer differential</value>
   </data>
   <data name="TypeF" xml:space="preserve">
-    <value>Complet</value>
+    <value>pour Complet entrer full</value>
   </data>
 </root>

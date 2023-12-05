@@ -48,7 +48,7 @@ namespace BackupSoftware
             LanguageManager bcm = new LanguageManager(bc);
             ChosedLanguage viewlan = new ChosedLanguage(bcm);
             viewlan.chosingLanguage.translate();
-            Console.WriteLine(Properties.Resources.NumJ);
+            Console.WriteLine(Properties.Resources.NumJ + ":");
 
             int numberOfJobs;
 
@@ -74,7 +74,7 @@ namespace BackupSoftware
                 Console.WriteLine(Properties.Resources.Path + $"{i}:");
                 string destinationPath = Console.ReadLine();
 
-                Console.WriteLine(Properties.Resources.TypeBack + $"{i}" + Properties.Resources.TypeF + " / " + Properties.Resources.TypeD + " :");
+                Console.WriteLine(Properties.Resources.TypeBack + " " + Properties.Resources.TypeF + " / " + Properties.Resources.TypeD + " :");
                 string backupType = Console.ReadLine();
 
                 while (string.IsNullOrEmpty(backupType) || (!backupType.Equals("Differential", StringComparison.OrdinalIgnoreCase) && !backupType.Equals("Full", StringComparison.OrdinalIgnoreCase)))

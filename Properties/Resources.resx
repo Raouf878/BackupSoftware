@@ -147,9 +147,9 @@ en - English</value>
     <value>Enter the type of backup for Job</value>
   </data>
   <data name="TypeD" xml:space="preserve">
-    <value>Differential</value>
+    <value>for Differential type differential</value>
   </data>
   <data name="TypeF" xml:space="preserve">
-    <value>Full</value>
+    <value>for Full type full </value>
   </data>
 </root>
